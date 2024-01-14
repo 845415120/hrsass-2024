@@ -1,5 +1,5 @@
 import Vue from 'vue'
-
+import request from '@/utils/request'
 import 'normalize.css/normalize.css' // A modern alternative to CSS resets
 
 import ElementUI from 'element-ui'
@@ -20,7 +20,8 @@ Vue.use(ElementUI, { locale })
 // Vue.use(ElementUI)
 
 Vue.config.productionTip = false
-console.log(process.env)
+// console.log(process.env)
+Vue.prototype.$request = request
 new Vue({
   el: '#app',
   router,

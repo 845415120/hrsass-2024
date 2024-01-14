@@ -37,6 +37,11 @@ module.exports = {
     overlay: {
       warnings: false,
       errors: true
+    },
+    // 如果你请求的接口包含api 这个接口将会请求http://localhost:3000地址
+    // 比如 :/api/user  => http://localhost:3000/api/user
+    proxy: {
+      '/api': 'http://ihrm-java.itheima.net/'
     }
     // before: require('./mock/mock-server.js')
   },

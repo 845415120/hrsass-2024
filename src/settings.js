@@ -7,7 +7,7 @@ module.exports = {
    * @description Whether fix the header
    */
   // 固定首页头部
-  fixedHeader: true,
+  fixedHeader: false,
 
   /**
    * @type {boolean} true | false

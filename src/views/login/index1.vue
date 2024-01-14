@@ -8,14 +8,15 @@
         </h3>
       </div>
 
-      <el-form-item prop="mobile">
+      <el-form-item prop="username">
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
         <el-input
           ref="username"
-          v-model="loginForm.mobile"
-          placeholder="请输入手机号"
+          v-model="loginForm.username"
+          placeholder="Username"
+          name="username"
           type="text"
           tabindex="1"
           auto-complete="on"
@@ -31,7 +32,7 @@
           ref="password"
           v-model="loginForm.password"
           :type="passwordType"
-          placeholder="请输入密码"
+          placeholder="Password"
           name="password"
           tabindex="2"
           auto-complete="on"
@@ -42,16 +43,11 @@
         </span>
       </el-form-item>
 
-      <el-button
-        class="loginBtn"
-        :loading="loading"
-        type="primary"
-        style="width:100%;margin-bottom:30px;"
-        @click.native.prevent="handleLogin"
-      >登录</el-button>
+      <el-button :loading="loading" type="primary" class="loginBtn" style="width:100%;margin-bottom:30px;" @click="handleLogin">登录</el-button>
+      <el-button @click="resetForm('loginForm')">重置</el-button>
 
       <div class="tips">
-        <span style="margin-right:20px;">账号: 13800000002</span>
+        <span style="margin-right:20px;">账号: admin</span>
         <span> 密码: 123456</span>
       </div>
 
@@ -60,35 +56,33 @@
 </template>
 
 <script>
-import { validMobile } from '@/utils/validate'
-import { mapActions } from 'vuex'
+import { validUsername } from '@/utils/validate'
+
 export default {
   name: 'Login',
   data() {
-    const validateMobile = (rule, value, callback) => {
-      // value是否符合手机号格式
-      validMobile(value) ? callback() : callback(new Error('手机号格式不正确'))
+    const validateUsername = (rule, value, callback) => {
+      if (!validUsername(value)) {
+        callback(new Error('Please enter the correct user name'))
+      } else {
+        callback()
+      }
     }
-    // validator 自定义校验函数
-    // 可以自主的校验函数
-    // function (rule, value, callback) {}
-    // value => callback  callback(new Error())
-
+    const validatePassword = (rule, value, callback) => {
+      if (value.length < 6) {
+        callback(new Error('The password can not be less than 6 digits'))
+      } else {
+        callback()
+      }
+    }
     return {
       loginForm: {
-        mobile: '13800000002',
+        username: 'admin',
         password: '123456'
       },
       loginRules: {
-        mobile: [{ required: true, trigger: 'blur', message: '请输入手机号' }, {
-          trigger: 'blur',
-          validator: validateMobile// 校验手机号
-        }],
-        // 校验规则
-        // min   max  校验的字符串 指的是长度 校验的是数字 校验的大小
-        password: [{ required: true, trigger: 'blur', message: '请输入密码' }, {
-          min: 6, max: 16, message: '密码长度在6-16位之间', trigger: 'blur'
-        }]
+        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
+        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
       loading: false,
       passwordType: 'password',
@@ -104,7 +98,6 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['user/login']),
     showPwd() {
       if (this.passwordType === 'password') {
         this.passwordType = ''
@@ -115,24 +108,24 @@ export default {
         this.$refs.password.focus()
       })
     },
-    // 登录
     handleLogin() {
-      this.$refs.loginForm.validate(async isOK => {
-        if (isOK) {
-          // 表示校验通过
+      this.$refs.loginForm.validate(valid => {
+        if (valid) {
           this.loading = true
-          try {
-            await this['user/login'](this.loginForm)
-            // 只要进行到这个位置 说明登录成功了 跳到主页
-            this.$router.push('/')
-          } catch (error) {
-            //
-          } finally {
-            // finally是和trycatch配套的 不论你执行不执行catch都会执行finally
+          this.$store.dispatch('user/login', this.loginForm).then(() => {
+            this.$router.push({ path: this.redirect || '/' })
             this.loading = false
-          }
+          }).catch(() => {
+            this.loading = false
+          })
+        } else {
+          console.log('error submit!!')
+          return false
         }
       })
+    },
+    resetForm() {
+      this.$refs.loginForm.resetFields()
     }
   }
 }
@@ -143,19 +136,19 @@ export default {
 /* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
 
 $bg:#283443;
-$light_gray: #68b0fe;
+$light_gray:#fff;
 $cursor: #fff;
 
 @supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
   .login-container .el-input input {
+
     color: $cursor;
+
   }
 }
 
 /* reset element-ui css */
 .login-container {
-  background-image: url('~@/assets/common/login.jpg');
-  background-position: center;
   .el-input {
     display: inline-block;
     height: 47px;
@@ -184,30 +177,21 @@ $cursor: #fff;
     border-radius: 5px;
     color: #454545;
   }
-   .el-form-item__error {
-    color: #fff
-  }
-  .loginBtn {
-  background: #407ffe;
-  height: 64px;
-  line-height: 32px;
-  font-size: 24px;
-}
-
 }
 </style>
 
 <style lang="scss" scoped>
 $bg:#2d3a4b;
 $dark_gray:#889aa4;
-$light_gray:#eee;
+$light_gray:#68b0fe;
 
 .login-container {
   min-height: 100%;
   width: 100%;
   background-color: $bg;
   overflow: hidden;
-
+  background-image: url('~@/assets/common/login.jpg'); // 设置背景图片
+  background-position: center; // 将图片位置设置为充满整个屏幕
   .login-form {
     position: relative;
     width: 520px;
@@ -258,5 +242,15 @@ $light_gray:#eee;
     cursor: pointer;
     user-select: none;
   }
+   .el-form-item__error {
+    color: #fff
+  }
+  .loginBtn {
+  background: #407ffe;
+  height: 64px;
+  line-height: 32px;
+  font-size: 24px;
+}
 }
 </style>
+
